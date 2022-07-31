@@ -25,6 +25,8 @@ public class HoleMovement : MonoBehaviour
     Vector3 touch, targetPos;
     public float moveSpeed;
 
+    public float scaleMultiplier;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -70,22 +72,48 @@ public class HoleMovement : MonoBehaviour
             UpdateHoleVerticesPosition();
 
         }
-
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            SetHoleScale(scaleMultiplier);
+        }
     }
 
 
-   void MoveHole()
+    void MoveHole()
    {
         x = Input.GetAxis("Mouse X");
         y = Input.GetAxis("Mouse Y");
 
         //lerp (smooth) movement
-        touch = Vector3.Lerp(holeCenter.position, holeCenter.position + new Vector3(x, 0f, y), moveSpeed * Time.deltaTime
-        );
+        touch = Vector3.Lerp(holeCenter.position, holeCenter.position + new Vector3(x, 0f, y), moveSpeed * Time.deltaTime);
 
         targetPos = new Vector3(Mathf.Clamp(touch.x, -moveLimits.x, moveLimits.x),touch.y,Mathf.Clamp(touch.z, -moveLimits.y, moveLimits.y));
 
         holeCenter.position = targetPos;
+    }
+
+    void SetHoleScale(float multiplier) 
+    {
+        Vector3[] vertices = mesh.vertices;
+        for (int i = 0; i < holeVerticesCount; i++)
+        {
+            vertices[holeVertices[i]] = holeCenter.position + offSets[i] * multiplier;
+
+        }
+
+        //update mesh
+        mesh.vertices = vertices;
+        meshFilter.mesh = mesh;
+        meshCollider.sharedMesh = mesh;
+
+        holeCenter.localScale *= multiplier;
+
+        for (int i = 0; i < offSets.Count; i++)
+        {
+            offSets[i] *= multiplier;
+        }
+
+        moveLimits /= 1.3f; // set up correctly
     }
 
     void UpdateHoleVerticesPosition()
@@ -108,5 +136,8 @@ public class HoleMovement : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(holeCenter.position, radius);
     }
+
+
+
 
 }
