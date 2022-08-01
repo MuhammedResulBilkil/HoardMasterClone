@@ -27,6 +27,22 @@ public class HoleMovement : MonoBehaviour
 
     public float scaleMultiplier;
 
+    public static HoleMovement Instance;
+
+    public GameObject upgradePanel;
+
+    private void Awake()
+    {
+        if(Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(this);
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -72,10 +88,7 @@ public class HoleMovement : MonoBehaviour
             UpdateHoleVerticesPosition();
 
         }
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            SetHoleScale(scaleMultiplier);
-        }
+
     }
 
 
@@ -85,15 +98,18 @@ public class HoleMovement : MonoBehaviour
         y = Input.GetAxis("Mouse Y");
 
         //lerp (smooth) movement
-        touch = Vector3.Lerp(holeCenter.position, holeCenter.position + new Vector3(x, 0f, y), moveSpeed * Time.deltaTime);
+        touch = Vector3.Lerp(holeCenter.position, holeCenter.position + new Vector3(-y, 0f, x), moveSpeed * Time.deltaTime);
 
         targetPos = new Vector3(Mathf.Clamp(touch.x, -moveLimits.x, moveLimits.x),touch.y,Mathf.Clamp(touch.z, -moveLimits.y, moveLimits.y));
 
         holeCenter.position = targetPos;
     }
 
-    void SetHoleScale(float multiplier) 
+    public void SetHoleScale(float multiplier) 
     {
+        /*
+         * 
+         *FIRST VERSION OF SET HOLE SCALE FUNCTION
         Vector3[] vertices = mesh.vertices;
         for (int i = 0; i < holeVerticesCount; i++)
         {
@@ -112,6 +128,56 @@ public class HoleMovement : MonoBehaviour
         {
             offSets[i] *= multiplier;
         }
+
+        moveLimits /= 1.3f; // set up correctly
+        
+        */
+        IEnumerator c = SetHoleScaleCoroutine(multiplier);
+        StartCoroutine(c);
+
+    }
+
+    IEnumerator SetHoleScaleCoroutine(float multiplier)
+    {
+        //if > offsets, then dont scale
+
+        Vector3[] vertices = mesh.vertices;
+        Vector3 holeCenterLocalScaleEnd = holeCenter.localScale * multiplier;
+
+        List<Vector3> offSetsEnd = new List<Vector3>();
+
+        for (int i = 0; i < offSets.Count; i++)
+        {
+            offSetsEnd.Add(offSets[i] * multiplier);
+        }
+
+        while (vertices[holeVertices[0]] != holeCenter.position + offSets[0] * multiplier)
+        {
+            for (int i = 0; i < holeVerticesCount; i++)
+            {
+                vertices[holeVertices[i]] = Vector3.Lerp(vertices[holeVertices[i]], holeCenter.position + offSetsEnd[i], 0.5f);
+
+
+            }
+
+            //update mesh
+            mesh.vertices = vertices;
+            meshFilter.mesh = mesh;
+            meshCollider.sharedMesh = mesh;
+
+            //****************
+
+            holeCenter.localScale = Vector3.Lerp(holeCenter.localScale, holeCenterLocalScaleEnd, 0.4f);
+
+
+            yield return null;
+        }
+
+        for (int i = 0; i < offSets.Count; i++)
+        {
+            offSets[i] *= multiplier;
+        }
+        
 
         moveLimits /= 1.3f; // set up correctly
     }
@@ -138,6 +204,41 @@ public class HoleMovement : MonoBehaviour
     }
 
 
+    public void UpdateRadius()
+    {
+        SetHoleScale(1.5f);
+    }
+
+    public void UpdateSpeed()
+    {
+        moveSpeed += 1;
+    }
+
+
+    public void UpdateCapacity()
+    {
+        FallCollider.Instance.collectiblesMaxCount += 3;
+    }
+
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.tag == "upgrade")
+        {
+            Debug.Log("Upgrade panel open");
+            upgradePanel.SetActive(true);
+        }
+    }
+    
+    private void OnTriggerExit(Collider other)
+    {
+        if(other.tag == "upgrade")
+        {
+            Debug.Log("Upgrade panel closed");
+            upgradePanel.SetActive(false);
+
+        }
+    }
 
 
 }
