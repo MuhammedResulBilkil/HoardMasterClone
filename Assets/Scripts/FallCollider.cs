@@ -32,7 +32,7 @@ public class FallCollider : MonoBehaviour
         if(other.transform.tag == "gold" )
         {
             float newValue = progress.value + 1;
-            progress.value = Mathf.Lerp(progress.value, newValue, Time.deltaTime);
+            progress.value = newValue;
 
 
             collectiblesCount++;
@@ -44,7 +44,8 @@ public class FallCollider : MonoBehaviour
         else if(other.transform.tag == "silver" )
         {
             float newValue = progress.value + 1;
-            progress.value = Mathf.Lerp(progress.value, newValue, Time.deltaTime);
+            progress.value = newValue;
+
 
             collectiblesCount++;
             silverCount++;
@@ -55,7 +56,8 @@ public class FallCollider : MonoBehaviour
         else if(other.transform.tag == "crystal" )
         {
             float newValue = progress.value + 1;
-            progress.value = Mathf.Lerp(progress.value, newValue, Time.deltaTime);
+            progress.value = newValue;
+
 
             collectiblesCount++;
             crystalCount++;
