@@ -6,6 +6,10 @@ TagManager:
   tags:
   - Collectibles
   - upgrade
+  - empty
+  - gold
+  - silver
+  - crystal
   layers:
   - Default
   - TransparentFX

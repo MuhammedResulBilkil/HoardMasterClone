@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class HoleMovement : MonoBehaviour
 {
@@ -30,6 +30,21 @@ public class HoleMovement : MonoBehaviour
     public static HoleMovement Instance;
 
     public GameObject upgradePanel;
+    public GameObject fullHole;
+
+    public Text moneyTxt;
+    int money = 0;
+    public Text radiusCostTxt;
+    public Text capacityCostTxt;
+    public Text speedCostTxt;
+
+    int radiusCost = 40;
+    int capacityCost = 40;
+    int speedCost = 40;
+
+    int silverCountt, crystalCountt, goldCountt = 0;
+
+    public GameObject winPanel;
 
     private void Awake()
     {
@@ -57,6 +72,13 @@ public class HoleMovement : MonoBehaviour
 
         //find hole vertices in mesh
         FindHoleVertices();
+
+        SetHoleScale(0.5f);
+
+        radiusCostTxt.text = "$ " + radiusCost;
+        capacityCostTxt.text = "$ " + capacityCost;
+        speedCostTxt.text = "$ " + speedCost;
+        moneyTxt.text = "$ 0";
     }
 
     void FindHoleVertices()
@@ -87,6 +109,17 @@ public class HoleMovement : MonoBehaviour
 
             UpdateHoleVerticesPosition();
 
+        }
+
+        if(FallCollider.Instance.collectiblesCount == FallCollider.Instance.collectiblesMaxCount)
+        {
+            HoleIsFull(FallCollider.Instance.silverCount, FallCollider.Instance.goldCount, FallCollider.Instance.crystalCount);
+        }
+
+
+        if(FallCollider.Instance.progress.value == 25)
+        {
+            winPanel.SetActive(true);
         }
 
     }
@@ -179,7 +212,7 @@ public class HoleMovement : MonoBehaviour
         }
         
 
-        moveLimits /= 1.3f; // set up correctly
+        //moveLimits /= 1.3f; // set up correctly
     }
 
     void UpdateHoleVerticesPosition()
@@ -206,18 +239,47 @@ public class HoleMovement : MonoBehaviour
 
     public void UpdateRadius()
     {
-        SetHoleScale(1.5f);
+        if(money >= radiusCost)
+        {
+            SetHoleScale(1.5f);
+            money -= radiusCost;
+
+            radiusCost *= 2;
+            radiusCostTxt.text = "$ " + radiusCost;
+            moneyTxt.text = "$ " + money;
+
+        }
+
     }
 
     public void UpdateSpeed()
     {
-        moveSpeed += 1;
+        if(money >= speedCost)
+        {
+            moveSpeed += 1;
+            money -= speedCost;
+
+            speedCost *= 2;
+            speedCostTxt.text = "$ " + speedCost;
+            moneyTxt.text = "$ " + money;
+        }
+
     }
 
 
     public void UpdateCapacity()
     {
-        FallCollider.Instance.collectiblesMaxCount += 3;
+        if(money >= capacityCost)
+        {
+            FallCollider.Instance.collectiblesMaxCount += 3;
+            money -= capacityCost;
+
+            capacityCost *= 2;
+            capacityCostTxt.text = "$ " + capacityCost;
+            moneyTxt.text = "$ " + money;
+
+        }
+
     }
 
 
@@ -225,8 +287,11 @@ public class HoleMovement : MonoBehaviour
     {
         if(other.tag == "upgrade")
         {
-            Debug.Log("Upgrade panel open");
             upgradePanel.SetActive(true);
+
+        }else if(other.tag == "empty")
+        {
+            MakeHoleEmpty();
         }
     }
     
@@ -234,11 +299,76 @@ public class HoleMovement : MonoBehaviour
     {
         if(other.tag == "upgrade")
         {
-            Debug.Log("Upgrade panel closed");
             upgradePanel.SetActive(false);
 
         }
     }
 
+    void HoleIsFull(int silverCount, int crystalCount, int goldCount)
+    {
+        foreach (GameObject collectible in GameObject.FindGameObjectsWithTag("gold"))
+        {
+            collectible.GetComponent<Rigidbody>().isKinematic = true;
+        }
+        
+        foreach (GameObject collectible in GameObject.FindGameObjectsWithTag("silver"))
+        {
+            collectible.GetComponent<Rigidbody>().isKinematic = true;
+        }
+        
+        foreach (GameObject collectible in GameObject.FindGameObjectsWithTag("crystal"))
+        {
+            collectible.GetComponent<Rigidbody>().isKinematic = true;
+        }
 
+        silverCountt = silverCount;
+        goldCountt = goldCount;
+        crystalCountt = crystalCount;
+
+
+
+        fullHole.SetActive(true);
+    }
+
+    void MakeHoleEmpty()
+    {
+        foreach (GameObject collectible in GameObject.FindGameObjectsWithTag("gold"))
+        {
+            collectible.GetComponent<Rigidbody>().isKinematic = false;
+        }
+        foreach (GameObject collectible in GameObject.FindGameObjectsWithTag("silver"))
+        {
+            collectible.GetComponent<Rigidbody>().isKinematic = false;
+        }
+
+        foreach (GameObject collectible in GameObject.FindGameObjectsWithTag("crystal"))
+        {
+            collectible.GetComponent<Rigidbody>().isKinematic = false;
+        }
+
+        silverCountt = FallCollider.Instance.silverCount;
+        goldCountt = FallCollider.Instance.goldCount;
+        crystalCountt = FallCollider.Instance.crystalCount;
+
+        MakeMoney();
+
+        silverCountt = 0;
+        goldCountt = 0;
+        crystalCountt = 0;
+
+        FallCollider.Instance.silverCount = 0;
+        FallCollider.Instance.goldCount = 0;
+        FallCollider.Instance.crystalCount = 0;
+        FallCollider.Instance.collectiblesCount = 0;
+
+        fullHole.SetActive(false);
+
+    }
+
+    void MakeMoney()
+    {
+        int totalMoney = money + silverCountt * 20 + goldCountt * 70 + crystalCountt * 60;
+        money = totalMoney;
+        moneyTxt.text = "$ " + totalMoney;
+    }
 }

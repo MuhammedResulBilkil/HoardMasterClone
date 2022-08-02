@@ -1,12 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class FallCollider : MonoBehaviour
 {
-    int collectiblesCount = 0;
+    public int collectiblesCount = 0;
     public int collectiblesMaxCount = 5;
 
+    public int goldCount = 0;
+    public int silverCount = 0;
+    public int crystalCount = 0;
+
+    public Slider progress;
     public static FallCollider Instance;
 
     private void Awake()
@@ -23,17 +29,41 @@ public class FallCollider : MonoBehaviour
 
     private void OnCollisionEnter(Collision other)
     {
-        if(other.transform.tag == "Collectibles")
+        if(other.transform.tag == "gold" )
         {
+            float newValue = progress.value + 1;
+            progress.value = Mathf.Lerp(progress.value, newValue, Time.deltaTime);
+
+
             collectiblesCount++;
-            if(collectiblesCount == collectiblesMaxCount)
-            {
-                collectiblesCount = 0;
-                HoleMovement.Instance.SetHoleScale(1.5f);
-                //warning that is full, so needs to empty
-            }
+            goldCount++;
+
+            Destroy(other.gameObject);
+        }
+        
+        else if(other.transform.tag == "silver" )
+        {
+            float newValue = progress.value + 1;
+            progress.value = Mathf.Lerp(progress.value, newValue, Time.deltaTime);
+
+            collectiblesCount++;
+            silverCount++;
+
+            Destroy(other.gameObject);
+        }
+        
+        else if(other.transform.tag == "crystal" )
+        {
+            float newValue = progress.value + 1;
+            progress.value = Mathf.Lerp(progress.value, newValue, Time.deltaTime);
+
+            collectiblesCount++;
+            crystalCount++;
+
             Destroy(other.gameObject);
         }
     }
+
+    
 
 }
